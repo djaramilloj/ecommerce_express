@@ -1,21 +1,40 @@
 const express = require('express');
-const app = express();
 const path = require('path');
-const expressJsx = require('./express-jsx');
-const productRouter = require('./routes/products');
+//const expressJsx = require('./express-jsx');
+const productRouter = require('./routes/views/products');
 const productsApiRouter = require('./routes/api/products')
+const errorMiddleware = require('./utils/middleware/errorHandler');
+
+// app
+const app = express();
 
 // CUSTOM ENGINE    
 // app.engine("jsx", expressJsx);
 // app.set("views", "./views")
 // app.set("view engine", "jsx");
-app.use("/static", express.static(path.join(__dirname, "public")))
+
+// middlewares
 app.use(express.json())
 
+// static files handling
+app.use("/static", express.static(path.join(__dirname, "public")))
+
+// view engine set up
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
+// routes
 app.use('/products', productRouter) 
 app.use('/api/products', productsApiRouter)
+// redirect
+app.get('/', (req, res) => {
+    res.redirect('/products');
+})
 
+// error middleware
+app.use(errorMiddleware.logErrors);
+app.use(errorMiddleware.clientErrorHandler);
+app.use(errorMiddleware.errorDefault);
+
+// server 
 const server = app.listen(8000, ()=> console.log('server running on port: http://localhost:' + server.address().port))
