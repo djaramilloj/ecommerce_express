@@ -1,21 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const ProductService = require('../services/products');
+const productService = new ProductService();
 
-const products = [
-    {
-        name: 'shoes',
-        price: 80,
-        image: "https://source.unsplash.com/164_6wVEHfI"
-    },
-    {
-        name: 'shirts',
-        price: 30,
-        image: "https://source.unsplash.com/xPJYL0l5Ii8"
+router.get('/', async (req, res, next) => {
+    const { tags } = req.query;
+    try {
+        const products = await productService.getProducts({ tags });
+        res.render("products", {products})
+    } catch(error) {
+        next(error);
     }
-]
-
-router.get('/', (req, res) => {
-    res.render("products", {products})
 })
 
 
