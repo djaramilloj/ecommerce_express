@@ -1,7 +1,15 @@
 const config = require('../../config');
 const sentry = require('@sentry/node');
+const boom = require('@hapi/boom');
+const requestType = require('../../utils/requestType');
 
 sentry.init({ dsn: `https://${config.sentryDns}.ingest.sentry.io/${config.sentryId}` });
+
+function withErrorStack(err, stack) {
+    if (config.dev) {
+        return {...err, stack};
+    }
+}
 
 function logErrors(err, req, res, next) {
     sentry.captureException(err);
@@ -9,30 +17,38 @@ function logErrors(err, req, res, next) {
     next(err);
 }
 
+function wrapErrors (err, req, res, next) {
+    if (!err.isBoom) {
+        next(boom.badImplementation(err));
+    }
+
+    next(err);
+}
+
 function clientErrorHandler(err, req, res, next) {
-    // catch errors for ajax request
-    if(req.xhr) {
-        res.status(500).json({err: err.message});
+    const {
+        output: {statusCode, payload}
+    } = err;
+    // catch errors for ajax request or if error on streaming
+    if(requestType(req) || res.headersSent) {
+        res.status(statusCode).json(withErrorStack(payload, err.stack));
     } else {
         next(err);
     }
 }
 
-
 function errorDefault(err, req, res, next) {
     // catch erros while streaming
-    if(res.headersSent) {
-        next(err)
-    }
-    if(!config.dev) {
-        delete err.stack;
-    }
-    res.status(err.status || 500);
-    res.render("error", {error: err})
+    const {
+        output: {statusCode, payload}
+    } = err;
+    res.status(statusCode);
+    res.render("error", withErrorStack(payload, err.stack))
 } 
 
 module.exports = {
     logErrors,
+    wrapErrors,
     clientErrorHandler,
     errorDefault
 }

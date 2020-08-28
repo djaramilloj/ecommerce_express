@@ -1,10 +1,11 @@
 const express = require('express');
 const path = require('path');
 //const expressJsx = require('./express-jsx');
+const boom = require('@hapi/boom');
 const productRouter = require('./routes/views/products');
 const productsApiRouter = require('./routes/api/products')
 const errorMiddleware = require('./utils/middleware/errorHandler');
-
+const requestType = require('./utils/requestType');
 // app
 const app = express();
 
@@ -31,8 +32,20 @@ app.get('/', (req, res) => {
     res.redirect('/products');
 })
 
+app.use(function(req, res, next) {
+    if(requestType(req)) {
+        const {
+            output: {statusCode, payload}
+        } = boom.notFound();
+        res.status(statusCode).json(payload);
+    } else {
+        res.status(404).render("404");
+    }
+})
+
 // error middleware
 app.use(errorMiddleware.logErrors);
+app.use(errorMiddleware.wrapErrors);
 app.use(errorMiddleware.clientErrorHandler);
 app.use(errorMiddleware.errorDefault);
 
