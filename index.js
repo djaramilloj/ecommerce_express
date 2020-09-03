@@ -3,7 +3,8 @@ const path = require('path');
 //const expressJsx = require('./express-jsx');
 const boom = require('@hapi/boom');
 const productRouter = require('./routes/views/products');
-const productsApiRouter = require('./routes/api/products')
+const productsApiRouter = require('./routes/api/products');
+const authApiRouter = require('./routes/api/auth');
 const errorMiddleware = require('./utils/middleware/errorHandler');
 const requestType = require('./utils/requestType');
 // app
@@ -26,11 +27,13 @@ app.set("view engine", "pug");
 
 // routes
 app.use('/products', productRouter) 
-app.use('/api/products', productsApiRouter)
+productsApiRouter(app);
+app.use('/api/auth', authApiRouter)
 // redirect
 app.get('/', (req, res) => {
     res.redirect('/products');
 })
+
 
 app.use(function(req, res, next) {
     if(requestType(req)) {
