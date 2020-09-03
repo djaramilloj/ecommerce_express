@@ -6,6 +6,7 @@ const productRouter = require('./routes/views/products');
 const productsApiRouter = require('./routes/api/products');
 const authApiRouter = require('./routes/api/auth');
 const errorMiddleware = require('./utils/middleware/errorHandler');
+const helmet = require('helmet');
 const requestType = require('./utils/requestType');
 // app
 const app = express();
@@ -16,6 +17,7 @@ const app = express();
 // app.set("view engine", "jsx");
 
 // middlewares
+app.use(helmet())
 app.use(express.json())
 
 // static files handling

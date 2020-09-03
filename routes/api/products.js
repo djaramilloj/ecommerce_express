@@ -3,7 +3,9 @@ const ProductServices = require('../../services/products');
 const passport = require('passport');
 
 const validation = require('../../utils/middleware/validationHandler');
-const { productIdSchema, productTagSchema, updateProductSchema, createProductSchema } = require('../../utils/schema/product');
+const { productIdSchema, updateProductSchema, createProductSchema } = require('../../utils/schema/product');
+const cacheResponse = require('../../utils/cacheresponse');
+const time = require('../../utils/time');
 
 // jwt strategy
 require('../../utils/auth/strategies/jwt');
@@ -13,8 +15,8 @@ function productsApi(app) {
     app.use('api/products', router);
     const ProductService = new ProductServices();
     router.get('/', async (req, res, next) => {
+        cacheResponse(res, time.SIXTY_MINUTES_IN_SECONDS); 
         const { tags } = req.query;
-        console.log('req', req.query);
         try {
             const products = await ProductService.getProducts({ tags })
             res.status(200).json({
